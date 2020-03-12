@@ -1,0 +1,814 @@
+openapi: 3.0.1
+info:
+  title: Redmine API
+  description: "Redmine API"
+  version: "1.0"
+externalDocs:
+  description: Redmine Rest API Reference
+  url: http://www.redmine.org/projects/redmine/wiki/Rest_api
+servers:
+- url: http://redmine
+security:
+- api_key: []
+paths:
+  /issues.{format}:
+    get:
+      tags:
+      - Issues
+      summary: Listing issues
+      description: "issues"
+      operationId: "issuesList"
+      parameters:
+      - $ref: "#/components/parameters/format"
+      - $ref: "#/components/parameters/offset"
+      - $ref: "#/components/parameters/limit"
+      - $ref: "#/components/parameters/sort"
+      - $ref: "#/components/parameters/projectID"
+      - $ref: "#/components/parameters/subproject_id"
+      - $ref: "#/components/parameters/tracker_id"
+      - $ref: "#/components/parameters/status_id"
+      - $ref: "#/components/parameters/assigned_to_id"
+      - $ref: "#/components/parameters/cf_x"
+      - $ref: "#/components/parameters/include"
+      responses:
+        200:
+          description: |
+            Success
+          content:
+            application/json:
+              schema:
+                required:
+                - issues
+                - limit
+                - offset
+                - total_count
+                type: object
+                properties:
+                  issues:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Issue"
+                  total_count:
+                    type: integer
+                  offset:
+                    type: integer
+                  limit:
+                    type: integer
+    post:
+      tags:
+      - Issues
+      summary: Creating an issue
+      description: Creating an issue
+      operationId: "createIssue"
+      parameters:
+      - $ref: "#/components/parameters/format"
+      requestBody:
+        description: bodyJsondescription
+        content:
+          application/json:
+            schema:
+              title: Issue_create
+              required:
+              - issue
+              type: object
+              properties:
+                issue:
+                  $ref: "#/components/schemas/Issue_create_update_object"
+        required: false
+      responses:
+        201:
+          description: Success
+          content:
+            application/json:
+              schema:
+                required:
+                - issue
+                type: object
+                properties:
+                  issue:
+                    $ref: "#/components/schemas/Issue"
+        422:
+          description: Errors
+          content: 
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Errors_response"
+  /issues/{issue_id}.{format}:
+    get:
+      tags:
+      - Issues
+      summary: Showing an issue
+      operationId: "getIssue"
+      parameters:
+      - $ref: "#/components/parameters/issue_id"
+      - $ref: "#/components/parameters/format"
+      - $ref: "#/components/parameters/include"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                required:
+                - issue
+                type: object
+                properties:
+                  issue:
+                    $ref: "#/components/schemas/Issue"
+    put:
+      tags:
+      - Issues
+      summary: Updating an issue
+      operationId: "updateIssue"
+      parameters:
+      - $ref: "#/components/parameters/issue_id"
+      - $ref: "#/components/parameters/format"
+      requestBody:
+        description: bodyJsondescription
+        content:
+          application/json:
+            schema:
+              title: Issue_update
+              required:
+              - issue
+              type: object
+              properties:
+                issue:
+                  $ref: "#/components/schemas/Issue_create_update_object"
+      responses:
+        204:
+          description: Success
+          content: {}
+        422:
+          description: Errors
+          content: 
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Errors_response"
+    delete:
+      tags:
+      - Issues
+      summary: Deleting an issue
+      operationId: "deleteIssue"
+      parameters:
+      - $ref: "#/components/parameters/issue_id"
+      - $ref: "#/components/parameters/format"
+      responses:
+        204:
+          description: Success
+          content: {}
+  /issues/{issue_id}/watchers.{format}:
+    post:
+      tags:
+      - Issues
+      summary: Adding a watcher
+      operationId: "addIssueWatchers"
+      parameters:
+      - $ref: "#/components/parameters/issue_id"
+      - $ref: "#/components/parameters/format"
+      requestBody:
+        description: user_id
+        content:
+          application/json:
+            schema:
+              required:
+              - user_id
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                  description: id of the user to add as a watcher
+        required: false
+      responses:
+        204:
+          description: Success
+          content: {}
+  /issues/{issue_id}/watchers/{user_id}.{format}:
+    delete:
+      tags:
+      - Issues
+      summary: Removing a watcher
+      operationId: "deleteIssueWatcher"
+      parameters:
+      - $ref: "#/components/parameters/issue_id"
+      - $ref: "#/components/parameters/user_id"
+      - $ref: "#/components/parameters/format"
+      responses:
+        204:
+          description: Success
+          content: {}
+  /projects.{format}:
+    get:
+      tags:
+      - Projects
+      summary: Listing projects
+      description: Returns all projects (all public projects and private projects
+        where user have access to)
+      operationId: "projectsList"
+      parameters:
+      - $ref: "#/components/parameters/format"
+      - $ref: "#/components/parameters/include"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                required:
+                - limit
+                - offset
+                - projects
+                type: object
+                properties:
+                  projects:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Project"
+                  total_count:
+                    type: integer
+                  offset:
+                    type: integer
+                  limit:
+                    type: integer
+    post:
+      tags:
+      - Projects
+      summary: Creating a project
+      description: Creates a the project.
+      operationId: "createProject"
+      parameters:
+      - $ref: "#/components/parameters/format"
+      requestBody:
+        description: bodyJsondescription
+        content:
+          application/json:
+            schema:
+              title: Project_create
+              required:
+              - project
+              type: object
+              properties:
+                project:
+                  $ref: "#/components/schemas/Project_create_update_object"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                required:
+                - project
+                type: object
+                properties:
+                  project:
+                      $ref: "#/components/schemas/Project"
+  /projects/{project_id}.{format}:
+    get:
+      tags:
+      - Projects
+      summary: Showing a project
+      description: Returns the project of given id or identifier.
+      operationId: "getProject"
+      parameters:
+      - $ref: "#/components/parameters/project_id"
+      - $ref: "#/components/parameters/format"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                required:
+                - project
+                type: object
+                properties:
+                  project:
+                      $ref: "#/components/schemas/Project"
+    put:
+      tags:
+      - Projects
+      summary: Updating a project
+      description: Updates the project of given id or identifier.
+      operationId: "updateProject"
+      parameters:
+      - $ref: "#/components/parameters/project_id"
+      - $ref: "#/components/parameters/format"
+      requestBody:
+        description: bodyJsondescription
+        content:
+          application/json:
+            schema:
+              title: Project_update
+              required:
+              - project
+              type: object
+              properties:
+                project:
+                  $ref: "#/components/schemas/Project_create_update_object"
+      responses:
+        204:
+          description: Success
+          content: {}
+    delete:
+      tags:
+      - Projects
+      summary: Deleting a project
+      description: Deletes the project of given id or identifier.
+      operationId: "deleteProject"
+      parameters:
+      - $ref: "#/components/parameters/project_id"
+      - $ref: "#/components/parameters/format"
+      responses:
+        204:
+          description: Success
+          content: {}
+  /trackers.{format}:
+    get:
+      tags:
+      - Trackers
+      summary: Trackers
+      description: Trackers
+      operationId: "trackersList"
+      parameters:
+      - $ref: "#/components/parameters/format"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                required:
+                - trackers
+                type: object
+                properties:
+                  trackers:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Tracker"
+  /users.{format}:
+    get:
+      tags:
+      - Users
+      summary: Users
+      description: Users
+      operationId: "usersList"
+      parameters:
+      - $ref: "#/components/parameters/format"
+      - $ref: "#/components/parameters/status"
+      - $ref: "#/components/parameters/name"
+      - $ref: "#/components/parameters/group_id"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                required:
+                - users
+                - limit
+                - offset
+                - projects
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/User"
+                  total_count:
+                    type: integer
+                  offset:
+                    type: integer
+                  limit:
+                    type: integer
+  /users/{user_id}.{format}:
+    get:
+      tags:
+      - Users
+      summary: Users
+      description: Users
+      operationId: "getUser"
+      parameters:
+      - $ref: "#/components/parameters/user_id"
+      - $ref: "#/components/parameters/format"
+      - $ref: "#/components/parameters/include"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                required:
+                - user
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+components:
+  schemas:
+    Errors_response:
+      description: "errors response" 
+      type: object
+      properties:
+        errors:
+          type: array
+          items: 
+            type: string
+    Journal_history_item:
+      type: object
+      properties:
+        property:
+          type: string
+        name:
+          type: string
+        old_value:
+          type: string
+        new_value:
+          type: string
+    Journal:
+      type: object
+      properties:
+        id: 
+          type: integer
+        user:
+          $ref: "#/components/schemas/IdName"
+        notes:
+          type: string
+        created_on:
+          type: string
+          format: date-time
+        private_notes:
+          type: boolean
+        details:
+          type: array
+          items:
+            $ref: "#/components/schemas/Journal_history_item"
+    Issue:
+      type: object
+      properties:
+        id:
+          type: integer
+        project:
+          $ref: "#/components/schemas/IdName"
+        tracker:
+          $ref: "#/components/schemas/IdName"
+        status:
+          $ref: "#/components/schemas/IdName"
+        priority:
+          $ref: "#/components/schemas/IdName"
+        author:
+          $ref: "#/components/schemas/IdName"
+        assigned_to:
+          $ref: "#/components/schemas/IdName"
+        # watchers:
+        #   description: "!type unknown and may be other"
+        #   type: array
+        #   items: 
+        #     type: string
+        journals:
+          description: "journal"
+          type: array
+          items:
+            $ref: "#/components/schemas/Journal"
+        subject:
+          type: string
+        description:
+          type: string
+        start_date:
+          type: string
+        due_date:
+          type: string
+        done_ratio:
+          type: number
+        is_private:
+          type: boolean
+        estimated_hours:
+          type: number
+        created_on:
+          type: string
+          format: date-time
+        updated_on:
+          type: string
+          format: date-time
+        closed_on:
+          type: string
+          nullable: true
+          format: date-time
+      required:
+      - author
+      - created_on
+      - description
+      - done_ratio
+      - id
+      - priority
+      - project
+      - start_date
+      - status
+      - subject
+      - tracker
+      - updated_on
+    Issue_create_update_object:
+      title: titleissue
+      type: object
+      description: issuedescription
+      properties:
+        project_id:
+          type: integer
+        tracker_id:
+          type: integer
+        status_id:
+          type: integer
+          description: "issue status id (only in update)"
+        priority_id:
+          type: integer
+        subject:
+          type: string
+        description:
+          type: string
+        category_id:
+          type: integer
+        fixed_version_id:
+          type: integer
+          description: |
+            "ID of the Target Versions (previously called "Fixed Version" and still referred to as such in the API)"
+        assigned_to_id:
+          type: integer
+          description: |
+            "ID of the user to assign the issue to (currently no mechanism to assign by name)"
+        parent_issue_id:
+          type: integer
+          description: |
+            "ID of the parent issue"
+        custom_fields:
+          type: array
+          items:
+            $ref: "#/components/schemas/Custom_field"
+          description: "Custom fields"
+        watcher_user_ids:
+          type: array
+          items:
+            type: integer
+          description: |
+            "Array of user ids to add as watchers (since 2.3.0)"
+        is_private:
+          type: boolean
+          description: |
+            "Use true or false to indicate whether the issue is private or not"
+        estimated_hours:
+          type: number
+          description: "Number of hours estimated for issue"
+        notes:
+          type: string
+          description: "note comment (only in update)"
+    IdName:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+      - id
+      - name
+    Custom_field:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        multiple:
+          type: boolean
+        value:
+          type: string
+      required:
+        - id
+        - value
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        identifier:
+          type: string
+        description:
+          type: string
+        status:
+          type: integer
+        is_public:
+          type: boolean
+        trackers:
+          type: array
+          items:
+            $ref: "#/components/schemas/IdName"
+        inherit_members:
+          type: boolean
+        created_on:
+          type: string
+          format: date-time
+        updated_on:
+          type: string
+          format: date-time
+      required:
+      - created_on
+      - description
+      - id
+      - identifier
+      - name
+      - status
+      - updated_on
+    Project_create_update_object:
+      type: object
+      properties:
+        name:
+          type: string
+        identifier:
+          type: string
+        description:
+          type: string
+        homepage:
+          type: string
+        is_public:
+          type: boolean
+        parent_id:
+          type: number
+        inherit_members:
+          type: boolean
+        tracker_ids:
+          type: array
+          items:
+            type: integer
+        issue_categories:
+          type: array
+          items:
+            type: string
+        custom_fields:
+          type: array
+          items:
+            $ref: "#/components/schemas/Custom_field"
+    Tracker:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        default_status:
+          $ref: "#/components/schemas/IdName"
+        description:
+          type: string
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        login:
+          type: string
+        admin:
+          type: boolean
+        firstname:
+          type: string
+        lastname:
+          type: string
+        mail:
+          type: string
+          format: email
+        created_on:
+          type: string
+          format: date-time
+        last_login_on:
+          type: string
+          format: date-time  
+        groups:
+          type: array
+          items:
+            $ref: "#/components/schemas/IdName"
+  parameters:
+    format:
+      name: format
+      in: path
+      description: json or xml
+      required: true
+      schema:
+        type: string
+        default: json
+        enum:
+        - json
+        - xml
+    offset:
+      name: offset
+      in: query
+      description: "skip this number of issues in response (optional)  \n"
+      allowEmptyValue: true
+      schema:
+        type: integer
+    limit:
+      name: limit
+      in: query
+      description: number of issues per page (optional)
+      schema:
+        type: integer
+    sort:
+      name: sort
+      in: query
+      description: column to sort with. Append :desc to invert the order.
+      schema:
+        type: string
+    projectID:
+      name: project_id
+      in: query
+      description: get issues from the project with the given id (a numeric value,
+        not a project identifier).
+      schema:
+        type: integer
+    subproject_id:
+      name: subproject_id
+      in: query
+      description: get issues from the subproject with the given id. You can use
+        project_id=XXX&subproject_id=!* to get only the issues of a given project
+        and none of its subprojects.
+      schema:
+        type: string
+    tracker_id:
+        name: tracker_id
+        in: query
+        description: get issues from the tracker with the given id
+        schema:
+          type: integer
+    status_id:      
+        name: status_id
+        in: query
+        description: "get issues with the given status id only. Possible values: open,
+          closed, * to get open and closed issues, status id"
+        schema:
+          type: string
+    assigned_to_id:      
+        name: assigned_to_id
+        in: query
+        description: get issues which are assigned to the given user id. me can be
+          used instead an ID to fetch all issues from the logged in user (via API
+          key or HTTP auth)
+        schema:
+          type: string
+    cf_x:      
+        name: cf_x
+        in: query
+        description: get issues with the given value for custom field with an ID of
+          x. (Custom field must have "used as a filter" checked.)
+        schema:
+          type: string
+    issue_id:
+      name: issue_id
+      in: path
+      description: The user identifier number
+      required: true
+      schema:
+        type: integer
+    user_id:
+      name: user_id
+      in: path
+      description: The user identifier number
+      required: true
+      schema:
+        type: integer
+    project_id:
+      name: project_id
+      in: path
+      description: The user identifier number
+      required: true
+      schema:
+        type: integer
+    include:
+      name: include
+      in: query
+      description: |
+        fetch associated data (optional). Possible values: trackers, issue_categories, enabled_modules (since 2.6.0).
+        Values should be separated by a comma ",".
+      schema:
+        type: string
+    status:
+      name: status
+      in: query
+      description: ""
+      schema:
+        type: string
+    name:
+      name: name
+      in: query
+      description: ""
+      schema:
+        type: string
+    group_id:
+      name: group_id
+      in: query
+      description: ""
+      schema:
+        type: string
+  securitySchemes:
+    api_key:
+      type: apiKey
+      name: key
+      in: query
