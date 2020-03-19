@@ -30,6 +30,8 @@ paths:
       - $ref: "#/components/parameters/assigned_to_id"
       - $ref: "#/components/parameters/cf_x"
       - $ref: "#/components/parameters/include"
+      - $ref: "#/components/parameters/created_on"
+      - $ref: "#/components/parameters/updated_on"
       responses:
         200:
           description: |
@@ -803,6 +805,18 @@ components:
         type: string
     group_id:
       name: group_id
+      in: query
+      description: ""
+      schema:
+        type: string
+    created_on:
+      name: created_on
+      in: query
+      description: ""
+      schema:
+        type: string
+    updated_on:
+      name: updated_on
       in: query
       description: ""
       schema:
