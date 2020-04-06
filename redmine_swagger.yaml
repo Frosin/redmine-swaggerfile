@@ -32,6 +32,7 @@ paths:
       - $ref: "#/components/parameters/include"
       - $ref: "#/components/parameters/created_on"
       - $ref: "#/components/parameters/updated_on"
+      - $ref: "#/components/parameters/issue_ids"
       responses:
         200:
           description: |
@@ -444,6 +445,12 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Journal_history_item"
+      required:
+        - id
+        - notes
+        - created_on
+        - private_notes
+        - details
     Issue:
       type: object
       properties:
@@ -533,9 +540,9 @@ components:
           description: |
             "ID of the Target Versions (previously called "Fixed Version" and still referred to as such in the API)"
         assigned_to_id:
-          type: integer
+          type: string
           description: |
-            "ID of the user to assign the issue to (currently no mechanism to assign by name)"
+            "it will be int value but unassign if value == ''"
         parent_issue_id:
           type: integer
           description: |
@@ -688,6 +695,13 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/IdName"
+      required:
+        - id
+        - login
+        - admin
+        - firstname
+        - lastname
+        - mail
   parameters:
     format:
       name: format
@@ -817,6 +831,12 @@ components:
         type: string
     updated_on:
       name: updated_on
+      in: query
+      description: ""
+      schema:
+        type: string
+    issue_ids:
+      name: issue_id
       in: query
       description: ""
       schema:
