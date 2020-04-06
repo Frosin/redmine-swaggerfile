@@ -67,9 +67,9 @@ type Issue struct {
 // IssueCreateUpdateObject defines model for Issue_create_update_object.
 type IssueCreateUpdateObject struct {
 
-	// "ID of the user to assign the issue to (currently no mechanism to assign by name)"
-	AssignedToId *int `json:"assigned_to_id,omitempty"`
-	CategoryId   *int `json:"category_id,omitempty"`
+	// "it will be int value but unassign if value == ''"
+	AssignedToId *string `json:"assigned_to_id,omitempty"`
+	CategoryId   *int    `json:"category_id,omitempty"`
 
 	// Custom fields
 	CustomFields *[]CustomField `json:"custom_fields,omitempty"`
@@ -103,12 +103,12 @@ type IssueCreateUpdateObject struct {
 
 // Journal defines model for Journal.
 type Journal struct {
-	CreatedOn    *time.Time            `json:"created_on,omitempty"`
-	Details      *[]JournalHistoryItem `json:"details,omitempty"`
-	Id           *int                  `json:"id,omitempty"`
-	Notes        *string               `json:"notes,omitempty"`
-	PrivateNotes *bool                 `json:"private_notes,omitempty"`
-	User         *IdName               `json:"user,omitempty"`
+	CreatedOn    time.Time            `json:"created_on"`
+	Details      []JournalHistoryItem `json:"details"`
+	Id           int                  `json:"id"`
+	Notes        string               `json:"notes"`
+	PrivateNotes bool                 `json:"private_notes"`
+	User         *IdName              `json:"user,omitempty"`
 }
 
 // JournalHistoryItem defines model for Journal_history_item.
@@ -157,15 +157,15 @@ type Tracker struct {
 
 // User defines model for User.
 type User struct {
-	Admin       *bool      `json:"admin,omitempty"`
+	Admin       bool       `json:"admin"`
 	CreatedOn   *time.Time `json:"created_on,omitempty"`
-	Firstname   *string    `json:"firstname,omitempty"`
+	Firstname   string     `json:"firstname"`
 	Groups      *[]IdName  `json:"groups,omitempty"`
-	Id          *int       `json:"id,omitempty"`
+	Id          int        `json:"id"`
 	LastLoginOn *time.Time `json:"last_login_on,omitempty"`
-	Lastname    *string    `json:"lastname,omitempty"`
-	Login       *string    `json:"login,omitempty"`
-	Mail        *string    `json:"mail,omitempty"`
+	Lastname    string     `json:"lastname"`
+	Login       string     `json:"login"`
+	Mail        string     `json:"mail"`
 }
 
 // AssignedToId defines model for assigned_to_id.
@@ -188,6 +188,9 @@ type Include string
 
 // IssueId defines model for issue_id.
 type IssueId int
+
+// IssueIds defines model for issue_ids.
+type IssueIds string
 
 // Limit defines model for limit.
 type Limit int
@@ -260,6 +263,7 @@ type IssuesListParams struct {
 	Include   *Include   `json:"include,omitempty"`
 	CreatedOn *CreatedOn `json:"created_on,omitempty"`
 	UpdatedOn *UpdatedOn `json:"updated_on,omitempty"`
+	IssueId   *IssueIds  `json:"issue_id,omitempty"`
 }
 
 // CreateIssueJSONBody defines parameters for CreateIssue.
@@ -777,7 +781,13 @@ func NewIssuesListRequest(server string, format Format, params *IssuesListParams
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/issues.%s", pathParam0))
+
+	basePath := fmt.Sprintf("/issues.%s", pathParam0)
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -976,6 +986,22 @@ func NewIssuesListRequest(server string, format Format, params *IssuesListParams
 
 	}
 
+	if params.IssueId != nil {
+
+		if queryFrag, err := runtime.StyleParam("form", true, "issue_id", *params.IssueId); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
 	queryUrl.RawQuery = queryValues.Encode()
 
 	req, err := http.NewRequest("GET", queryUrl.String(), nil)
@@ -1012,7 +1038,13 @@ func NewCreateIssueRequestWithBody(server string, format Format, contentType str
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/issues.%s", pathParam0))
+
+	basePath := fmt.Sprintf("/issues.%s", pathParam0)
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -1048,7 +1080,13 @@ func NewDeleteIssueRequest(server string, issueId IssueId, format Format) (*http
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/issues/%s.%s", pathParam0, pathParam1))
+
+	basePath := fmt.Sprintf("/issues/%s.%s", pathParam0, pathParam1)
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -1083,7 +1121,13 @@ func NewGetIssueRequest(server string, issueId IssueId, format Format, params *G
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/issues/%s.%s", pathParam0, pathParam1))
+
+	basePath := fmt.Sprintf("/issues/%s.%s", pathParam0, pathParam1)
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -1149,7 +1193,13 @@ func NewUpdateIssueRequestWithBody(server string, issueId IssueId, format Format
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/issues/%s.%s", pathParam0, pathParam1))
+
+	basePath := fmt.Sprintf("/issues/%s.%s", pathParam0, pathParam1)
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -1196,7 +1246,13 @@ func NewAddIssueWatchersRequestWithBody(server string, issueId IssueId, format F
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/issues/%s/watchers.%s", pathParam0, pathParam1))
+
+	basePath := fmt.Sprintf("/issues/%s/watchers.%s", pathParam0, pathParam1)
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -1239,7 +1295,13 @@ func NewDeleteIssueWatcherRequest(server string, issueId IssueId, userId UserId,
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/issues/%s/watchers/%s.%s", pathParam0, pathParam1, pathParam2))
+
+	basePath := fmt.Sprintf("/issues/%s/watchers/%s.%s", pathParam0, pathParam1, pathParam2)
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -1267,7 +1329,13 @@ func NewProjectsListRequest(server string, format Format, params *ProjectsListPa
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/projects.%s", pathParam0))
+
+	basePath := fmt.Sprintf("/projects.%s", pathParam0)
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -1326,7 +1394,13 @@ func NewCreateProjectRequestWithBody(server string, format Format, contentType s
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/projects.%s", pathParam0))
+
+	basePath := fmt.Sprintf("/projects.%s", pathParam0)
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -1362,7 +1436,13 @@ func NewDeleteProjectRequest(server string, projectId ProjectId, format Format) 
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/projects/%s.%s", pathParam0, pathParam1))
+
+	basePath := fmt.Sprintf("/projects/%s.%s", pathParam0, pathParam1)
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -1397,7 +1477,13 @@ func NewGetProjectRequest(server string, projectId ProjectId, format Format) (*h
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/projects/%s.%s", pathParam0, pathParam1))
+
+	basePath := fmt.Sprintf("/projects/%s.%s", pathParam0, pathParam1)
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -1443,7 +1529,13 @@ func NewUpdateProjectRequestWithBody(server string, projectId ProjectId, format 
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/projects/%s.%s", pathParam0, pathParam1))
+
+	basePath := fmt.Sprintf("/projects/%s.%s", pathParam0, pathParam1)
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -1472,7 +1564,13 @@ func NewTrackersListRequest(server string, format Format) (*http.Request, error)
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/trackers.%s", pathParam0))
+
+	basePath := fmt.Sprintf("/trackers.%s", pathParam0)
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -1500,7 +1598,13 @@ func NewUsersListRequest(server string, format Format, params *UsersListParams) 
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/users.%s", pathParam0))
+
+	basePath := fmt.Sprintf("/users.%s", pathParam0)
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -1587,7 +1691,13 @@ func NewGetUserRequest(server string, userId UserId, format Format, params *GetU
 	if err != nil {
 		return nil, err
 	}
-	queryUrl, err = queryUrl.Parse(fmt.Sprintf("/users/%s.%s", pathParam0, pathParam1))
+
+	basePath := fmt.Sprintf("/users/%s.%s", pathParam0, pathParam1)
+	if basePath[0] == '/' {
+		basePath = basePath[1:]
+	}
+
+	queryUrl, err = queryUrl.Parse(basePath)
 	if err != nil {
 		return nil, err
 	}
@@ -2193,15 +2303,16 @@ func ParseIssuesListResponse(rsp *http.Response) (*issuesListResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		response.JSON200 = &struct {
+		var dest struct {
 			Issues     []Issue `json:"issues"`
 			Limit      int     `json:"limit"`
 			Offset     int     `json:"offset"`
 			TotalCount int     `json:"total_count"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON200 = &dest
 
 	}
 
@@ -2223,18 +2334,20 @@ func ParseCreateIssueResponse(rsp *http.Response) (*createIssueResponse, error) 
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		response.JSON201 = &struct {
+		var dest struct {
 			Issue Issue `json:"issue"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON201); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON201 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
-		response.JSON422 = &ErrorsResponse{}
-		if err := json.Unmarshal(bodyBytes, response.JSON422); err != nil {
+		var dest ErrorsResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON422 = &dest
 
 	}
 
@@ -2275,12 +2388,13 @@ func ParseGetIssueResponse(rsp *http.Response) (*getIssueResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		response.JSON200 = &struct {
+		var dest struct {
 			Issue Issue `json:"issue"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON200 = &dest
 
 	}
 
@@ -2302,10 +2416,11 @@ func ParseUpdateIssueResponse(rsp *http.Response) (*updateIssueResponse, error) 
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
-		response.JSON422 = &ErrorsResponse{}
-		if err := json.Unmarshal(bodyBytes, response.JSON422); err != nil {
+		var dest ErrorsResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON422 = &dest
 
 	}
 
@@ -2365,15 +2480,16 @@ func ParseProjectsListResponse(rsp *http.Response) (*projectsListResponse, error
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		response.JSON200 = &struct {
+		var dest struct {
 			Limit      int       `json:"limit"`
 			Offset     int       `json:"offset"`
 			Projects   []Project `json:"projects"`
 			TotalCount *int      `json:"total_count,omitempty"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON200 = &dest
 
 	}
 
@@ -2395,12 +2511,13 @@ func ParseCreateProjectResponse(rsp *http.Response) (*createProjectResponse, err
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		response.JSON200 = &struct {
+		var dest struct {
 			Project Project `json:"project"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON200 = &dest
 
 	}
 
@@ -2441,12 +2558,13 @@ func ParseGetProjectResponse(rsp *http.Response) (*getProjectResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		response.JSON200 = &struct {
+		var dest struct {
 			Project Project `json:"project"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON200 = &dest
 
 	}
 
@@ -2487,12 +2605,13 @@ func ParseTrackersListResponse(rsp *http.Response) (*trackersListResponse, error
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		response.JSON200 = &struct {
+		var dest struct {
 			Trackers []Tracker `json:"trackers"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON200 = &dest
 
 	}
 
@@ -2514,15 +2633,16 @@ func ParseUsersListResponse(rsp *http.Response) (*usersListResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		response.JSON200 = &struct {
+		var dest struct {
 			Limit      int    `json:"limit"`
 			Offset     int    `json:"offset"`
 			TotalCount *int   `json:"total_count,omitempty"`
 			Users      []User `json:"users"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON200 = &dest
 
 	}
 
@@ -2544,12 +2664,13 @@ func ParseGetUserResponse(rsp *http.Response) (*getUserResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		response.JSON200 = &struct {
+		var dest struct {
 			User User `json:"user"`
-		}{}
-		if err := json.Unmarshal(bodyBytes, response.JSON200); err != nil {
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
+		response.JSON200 = &dest
 
 	}
 
@@ -2559,54 +2680,54 @@ func ParseGetUserResponse(rsp *http.Response) (*getUserResponse, error) {
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"AD58OPw/AAD//0uqsvslPwAA",
+	"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",
 }
 
 // GetSwagger returns the Swagger specification corresponding to the generated code
